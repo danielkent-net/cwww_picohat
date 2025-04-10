@@ -20,7 +20,7 @@ with other software tools.
 # License
 
 [The hardware is licensed under the CERN Open Hardware License Version
-2 - Strongly Recoprocal](LICENSE).
+2 - Strongly Reciprocal](LICENSE).
 
 [ESPHome configurations are licensed under the MIT license](LICENSE-SW).
 
