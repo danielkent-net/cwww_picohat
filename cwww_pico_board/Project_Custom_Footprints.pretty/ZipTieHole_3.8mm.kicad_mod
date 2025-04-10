@@ -1,0 +1,102 @@
+(footprint "ZipTieHole_3.8mm"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 0 -1.5 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "e6092eff-f447-4f9c-a558-91f11c9287a4")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+		)
+	)
+	(property "Value" "ZipTieHole_3.8mm"
+		(at 0 1 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "969e7e74-5110-4766-9e56-1ea4166303cb")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "07f86764-fca3-4d50-806b-b030f901b5fd")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "8dca60ea-f561-4c19-9804-d564f5eb60e6")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(fp_circle
+		(center 0 0)
+		(end 1.876397 1.410243)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "Cmts.User")
+		(uuid "72d62514-7fc1-4ceb-bb6e-d03c2ddf5024")
+	)
+	(fp_circle
+		(center 0 0)
+		(end 2.41793 0.496406)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "817864b5-41fe-447e-a26c-c135bfefafe8")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 2.5 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "75bfd3f3-1331-4d54-968e-563c297f6a2e")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "" np_thru_hole oval
+		(at 0 0)
+		(size 3.75 1.75)
+		(drill oval 3.8 1.8)
+		(layers "F&B.Cu" "*.Mask")
+		(clearance 0.1)
+		(thermal_bridge_angle 45)
+		(uuid "05823514-2054-4f16-9c55-73fe19ffb781")
+	)
+	(embedded_fonts no)
+)

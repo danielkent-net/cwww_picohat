@@ -1,0 +1,272 @@
+# Copyright (c) 2025 Daniel Kent
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# CWWW ESPHome configuration - Board Variant
+
+substitutions:
+  lampname: desklamp
+  lamp_name: desk_lamp
+  human_lamp_name: "Desk Lamp"
+  color_step: '2.25'
+  color_min: '166.66666'
+  color_max: '333.33333'
+  pwm_rate: '50000Hz'
+  pwm_encoder_rate: '200Hz'
+
+esphome:
+  name: ${lampname}
+  comment: ${human_lamp_name}
+  
+logger:
+  level: DEBUG
+  baud_rate: 115200
+  
+rp2040:
+  board: rpipicow
+  
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  reboot_timeout: 0s
+  ap:
+    ssid: "${lampname}_fallback"
+    password: !secret wifi_fallback_password
+    ap_timeout: 120min
+
+      
+api:
+  encryption:
+    key: !secret encryption_key
+  id: ${lampname}
+
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+globals:
+  - id: redshift
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+light:
+  - platform: cwww
+    name: ${human_lamp_name}
+    id: ${lamp_name}
+    cold_white: cool_pin
+    warm_white: warm_pin
+    cold_white_color_temperature: 6000 K
+    warm_white_color_temperature: 3000 K 
+    constant_brightness: true
+
+  - platform: cwww
+    name: "${human_lamp_name} Encoder Light"
+    id: ${lamp_name}_encoder_light
+    internal: true
+    cold_white: enc_pin_blue
+    warm_white: enc_pin_oran
+    cold_white_color_temperature: 6000 K
+    warm_white_color_temperature: 3000 K 
+    constant_brightness: true
+
+sensor:
+   - platform: rotary_encoder
+     name: "Rotary Encoder"
+     id: ${lamp_name}_encoder
+     resolution: 1
+     pin_a: 27
+     pin_b: 26
+     on_clockwise:
+       then:
+         - if:
+             condition:
+               and:
+                 - light.is_on: ${lamp_name}
+                 - lambda: 'return (id(redshift) == true);'
+             then:
+               - light.turn_on:
+                   id: ${lamp_name}
+                   color_temperature: !lambda 'return id(${lamp_name}).remote_values.get_color_temperature() - ${color_step};'
+                   transition_length: 200ms
+         - if:
+             condition:
+               and:
+                 - light.is_on: ${lamp_name}
+                 - lambda: 'return (id(redshift) == false);'
+             then:
+               - light.dim_relative:
+                   id: ${lamp_name}
+                   relative_brightness: 2%
+                   transition_length: 200ms
+                   brightness_limits:
+                     max_brightness: 100%
+                     min_brightness: 5%
+                     limit_mode: CLAMP
+               - script.execute:
+                   id: enc_led_sync_short
+             else:
+                - light.turn_on:
+                    id: ${lamp_name}
+                    transition_length: 500ms
+                - script.execute:
+                    id: enc_led_sync
+
+         - script.execute: idle_reset
+
+     on_anticlockwise:
+       then:
+         - if:
+             condition:
+               and:
+                 - light.is_on: ${lamp_name}
+                 - lambda: 'return (id(redshift) == true);'
+             then:
+               - light.turn_on:
+                   id: ${lamp_name}
+                   color_temperature: !lambda 'return id(${lamp_name}).remote_values.get_color_temperature() + ${color_step};'
+                   transition_length: 200ms
+         - if:
+             condition:
+               and:
+                 - light.is_on: ${lamp_name}
+                 - lambda: 'return (id(redshift) == false);'
+             then:
+               - light.dim_relative:
+                   id: ${lamp_name}
+                   relative_brightness: -2%
+                   transition_length: 200ms
+                   brightness_limits:
+                     max_brightness: 100%
+                     min_brightness: 5%
+                     limit_mode: CLAMP
+               - script.execute:
+                   id: enc_led_sync_short
+             else:
+               - light.turn_on:
+                   id: ${lamp_name}
+                   transition_length: 500ms
+               - script.execute:
+                   id: enc_led_sync
+
+         - script.execute: idle_reset
+
+binary_sensor:
+   - platform: gpio
+     pin: 
+       number: 20
+       mode: INPUT_PULLUP
+     id: ${lamp_name}_button_power
+     name: "${human_lamp_name} Power Button"
+     filters:
+      - invert:
+     on_click:
+       - min_length: 25ms
+         max_length: 500ms
+         then:
+         - if:
+            condition:
+              - light.is_off: ${lamp_name}
+            then:
+              - light.toggle: ${lamp_name}
+              - script.execute:
+                  id: enc_led_sync
+              - script.execute: idle_reset
+
+            else:
+              - light.turn_off:
+                  id: ${lamp_name}
+                  transition_length: 500ms           
+              - light.turn_off:
+                  id: ${lamp_name}_encoder_light
+                  transition_length: 500ms
+              - globals.set:
+                  id: redshift
+                  value: 'false'
+ 
+
+       - min_length: 501ms
+         max_length: 10000ms
+         then:
+         - globals.set:
+             id: redshift
+             value: !lambda 'return !id(redshift);'
+
+         - script.execute: idle_reset
+         
+        
+
+output:
+  - platform: rp2040_pwm
+    pin: 21
+    id: warm_pin
+    frequency: ${pwm_rate}
+ 
+  - platform: rp2040_pwm
+    pin: 22
+    id: cool_pin
+    frequency: ${pwm_rate}
+
+  - platform: rp2040_pwm
+    pin: 18
+    inverted: false
+    id: enc_pin_oran
+    frequency: ${pwm_encoder_rate}
+
+  - platform: rp2040_pwm
+    pin: 17
+    inverted: false
+    id: enc_pin_blue
+    frequency: ${pwm_encoder_rate}
+
+  - platform: gpio
+    id: board_led
+    pin:
+      number: 32
+      mode: output
+
+script:
+  - id: idle_reset
+    mode: restart
+    then:
+      - delay: 4000ms
+      - globals.set:
+          id: redshift
+          value: 'false'
+      - light.turn_off:
+          id: ${lamp_name}_encoder_light
+          transition_length: 500ms 
+
+  - id: enc_led_sync
+    then:
+     - light.turn_on:
+         id: ${lamp_name}_encoder_light
+         brightness: !lambda 'return id(${lamp_name}).remote_values.get_brightness();'
+         color_temperature: !lambda 'return id(${lamp_name}).remote_values.get_color_temperature();'
+         transition_length: 500ms
+            
+    
+  - id: enc_led_sync_short
+    then:
+     - light.turn_on:
+         id: ${lamp_name}_encoder_light
+         brightness: !lambda 'return id(${lamp_name}).remote_values.get_brightness();'
+         color_temperature: !lambda 'return id(${lamp_name}).remote_values.get_color_temperature();'
+         transition_length: 200ms
+

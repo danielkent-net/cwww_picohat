@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name "RPiPico")(type "KiCad")(uri "${KIPRJMOD}/MCU_RaspberryPi_and_Boards.pretty")(options "")(descr ""))
+  (lib (name "picolamp")(type "KiCad")(uri "${KIPRJMOD}/cwww_buttons.pretty")(options "")(descr ""))
+)

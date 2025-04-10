@@ -1,0 +1,3 @@
+[submodule "cwww_pico_board/RaspberryPi_Pico"]
+	path = cwww_pico_board/RaspberryPi_Pico
+	url = https://github.com/recursivenomad/ki-lime-pi-to-go.git
